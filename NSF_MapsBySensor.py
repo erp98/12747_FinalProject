@@ -49,7 +49,8 @@ plt.title('Argo Floats w Oxygen')
 oxy_count=0
 Oxy_Float=0
 prevfloat=000
-             
+
+goodind=[]         
 for i in np.arange(len(LatVals)):
     
     varslist=Vars[i].split()
@@ -64,6 +65,7 @@ for i in np.arange(len(LatVals)):
             plt.plot(LonVals[i], LatVals[i],'ro',markersize=2)
             varcheck=1
             oxy_count=oxy_count+1
+            goodind=goodind+[i]
             
             floattemp=int(FName[i].split('/')[1])
             
@@ -71,7 +73,9 @@ for i in np.arange(len(LatVals)):
                 prevfloat=floattemp
                 Oxy_Float=Oxy_Float+1
         j=j+1
-        
+
+plt.savefig('/Users/Ellen/Documents/GitHub/12747_FinalProject/Float_OxySens.jpg')
+
 plt.figure(2)
 plt.xlabel('Longitude')
 plt.ylabel('Latitude')
@@ -95,6 +99,7 @@ NA.xaxis.set_major_formatter(lon_formatter)
 NA.yaxis.set_major_formatter(lat_formatter)
         
 plt.title('Argo Floats w Nitrate')
+
 
 N_count=0
 N_Float=0
@@ -122,6 +127,7 @@ for i in np.arange(len(LatVals)):
                 N_Float=N_Float+1
                 
         j=j+1
+plt.savefig('/Users/Ellen/Documents/GitHub/12747_FinalProject/Float_NSens.jpg')
 
 plt.figure(3)
 plt.xlabel('Longitude')
@@ -178,11 +184,35 @@ for i in np.arange(len(LatVals)):
         if floattemp != prevfloat:
             prevfloat=floattemp
             Both_Float=Both_Float+1
+            
+plt.savefig('/Users/Ellen/Documents/GitHub/12747_FinalProject/Float_OxyNSens.jpg')
              
-plt.show()
 print('Oxygen Floats: ', Oxy_Float)
 print('Oxygen profiles: ', oxy_count)
 print('Nitrate Floats: ', N_Float)
 print('Nitrate profiles: ', N_count)
 print('Both Floats: ',Both_Float)
 print('Both profiles: ',NO_count)
+
+subset=Data.iloc[goodind,:]
+goodDate=Data.loc[:,'Date']
+goodDate=pd.to_datetime(goodDate, format='%Y%m%d%H%M%S')
+
+plt.figure()
+d=pd.DataFrame({'Date': goodDate})#, 'Lat': goodLat,'Lon': goodLon})
+d.groupby([d["Date"].dt.year,d["Date"].dt.month]).count().plot(kind="bar")
+plt.xlabel('Date (Year,Month)')
+plt.ylabel('Profile Counts')
+plt.title('GO-SHIP Date Historgram (Year-Month)')
+plt.tight_layout()
+plt.savefig('/Users/Ellen/Documents/GitHub/12747_FinalProject/Argo_YM_hist.jpg')
+
+plt.figure()
+d.groupby(d["Date"].dt.month).count().plot(kind="bar")
+plt.xlabel('Date (Month)')
+plt.ylabel('Profile Counts')
+plt.title('GO-SHIP Date Historgram (Month)')
+plt.tight_layout()
+plt.savefig('/Users/Ellen/Documents/GitHub/12747_FinalProject/Argo_M_hist.jpg')
+
+plt.show()

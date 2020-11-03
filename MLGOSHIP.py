@@ -16,30 +16,36 @@ from sklearn import linear_model
 # X = GOSHIP (Date, Lat, Lon, Pressure, Temp, Salinity, Oxygen)
 # Y = GOSHIP Data (TC)
 
-BoatFileList=glob.glob('/Users/Ellen/Desktop/GOSHIP_Data/*')
+BoatFileList=glob.glob('/Users/Ellen/Desktop/GOSHIP_Data/NAtlantic/*')
 df_counter=0
 
+awkf1='/Users/Ellen/Desktop/GOSHIP_Data/NAtlantic/0_29HE20020304_hy1.csv'
+awkf2= '/Users/Ellen/Desktop/GOSHIP_Data/NAtlantic/0_29HE20010305_hy1.csv'
 for CruiseFolder in BoatFileList:
 
 # Go into each Cruise Folder and determine what data is there
-    ShipData = glob.glob(CruiseFolder+'/*')
-    #print(ShipData)
-
     File=[]
-    Folder=[]
-
-    for shipdata in ShipData:
-        sdfname=shipdata.split('/')
-        sdfname=sdfname[6]
-
-        ftype=sdfname.split('.')
-
-        if len(ftype) > 1:
-            # Means file is file
-            File=File+[shipdata]
-        else:
-            # Means file is a folder
-            Folder=Folder+[shipdata]
+    
+    if CruiseFolder == awkf1:
+        File=File+[CruiseFolder]
+    elif CruiseFolder == awkf2:
+        File=File+[CruiseFolder]
+    else:
+        ShipData = glob.glob(CruiseFolder+'/*')
+        #print(ShipData)
+    
+    
+        for shipdata in ShipData:
+            
+            sdfname=shipdata.split('/')
+            sdfname=sdfname[len(sdfname)-1]
+    
+            ftype=sdfname.split('.')
+    
+            if len(ftype) > 1:
+                # Means file is file
+                #if ftype[len(ftype)-1] != 'pdf':
+                File=File+[shipdata]
 
     # Bottle files
     CSVfind = 0
@@ -47,7 +53,7 @@ for CruiseFolder in BoatFileList:
 
     for i in File:
         sdfname=i.split('/')
-        sdfname=sdfname[6]
+        sdfname=sdfname[len(sdfname)-1]
 
         ftype=sdfname.split('.')
 
@@ -63,23 +69,6 @@ for CruiseFolder in BoatFileList:
 
     print('CSV: ',BottleFile)
 
-    # CTD files
-    CTDfind=0
-    CTDFolder=[]
-
-    for i in Folder:
-        sdfname=i.split('/')
-        sdfname=sdfname[6]
-        ftype=sdfname.split('_')
-        ftag=ftype[len(ftype)-1]
-
-        if ftag == 'ct1':
-            # CTD measurements at many depths
-            # T,S,P, DOXY
-            CTDfind=CTDfind+1
-            CTDFolder=CTDFolder+[i]
-
-    print('CTD: ', CTDFolder)
 
 # If there are bottle files and/or CTD files
 # Open them, find dates, lat-lon, values
@@ -141,24 +130,40 @@ for CruiseFolder in BoatFileList:
                 BotPres=BotPres[:-1]
                 BotTemp=BottleData.loc[1:,'CTDTMP']
                 BotTemp=BotTemp[:-1]
-                BotSal=BottleData.loc[1:,'CTDSAL']
-                BotSal=BotSal[:-1]
+                
+                col=BottleData.columns
+                ctdsalcheck = 0
+                k=0
+                
+                while ctdsalcheck == 0 and k<len(col):
+                    
+                    if col[k]=='CTDSAL':
+                        ctdsalcheck =1
+                    k=k+1
+                
+                if ctdsalcheck ==1:
+                    BotSal=BottleData.loc[1:,'CTDSAL']
+                    BotSal=BotSal[:-1]
+                else:
+                    BotSal=BottleData.loc[1:,'SALNTY']
+                    BotSal=BotSal[:-1]
+                
                 BotOxy=BottleData.loc[1:,'OXYGEN']
                 BotOxy=BotOxy[:-1]
                 
-                var_check=0 
-                z=0
-                while z < len(BottleData.columns)-1 and var_check ==0:
-                    if BottleData.columns[z] == 'TCARBN':
-                        var_check = 1
-                    z=z+1
+                # var_check=0 
+                # z=0
+                # while z < len(BottleData.columns)-1 and var_check ==0:
+                #     if BottleData.columns[z] == 'TCARBN':
+                #         var_check = 1
+                #     z=z+1
                         
-                if var_check==1:
-                    BotTC=BottleData.loc[1:,'TCARBN']
-                    BotTC=BotTC[:-1]
+                # if var_check==1:
+                #     BotTC=BottleData.loc[1:,'TCARBN']
+                #     BotTC=BotTC[:-1]
                 
-                else:
-                    BotTC=[np.NaN]
+                # else:
+                #     BotTC=[np.NaN]
                     
                 BotN=BottleData.loc[1:,'NITRAT']
                 BotN=BotN[:-1]
@@ -179,15 +184,16 @@ for CruiseFolder in BoatFileList:
                     CruiseSal=BotSal[i]
                     CruiseOxy=BotOxy[i]
                     
-                    if len(BotTC) <= 1:
-                        CruiseTC=-999.00 #BotTC[i]
-                    else:
-                        CruiseTC=BotTC[i]
+                    # if len(BotTC) <= 1:
+                    #     CruiseTC=-999.00 #BotTC[i]
+                    # else:
+                    #     CruiseTC=BotTC[i]
                         
                     CruiseN=BotN[i]
                     CruiseP=BotP[i]
-    
-                    to_df={'CRUISE': [CruiseFolder],'FILENAME': [botfname],'DATATYPE': [DataType],'DATE': [Date],'LAT':[CruiseLat],'LON':[CruiseLon],'PRES': [CruisePres],'TEMP':[CruiseTemp], 'SAL':[CruiseSal],'OXY': [CruiseOxy],'TC':[CruiseTC],'P': [CruiseP],'N':[CruiseN]}
+                    
+                    to_df={'CRUISE': [CruiseFolder],'FILENAME': [botfname],'DATATYPE': [DataType],'DATE': [Date],'LAT':[CruiseLat],'LON':[CruiseLon],'PRES': [CruisePres],'TEMP':[CruiseTemp], 'SAL':[CruiseSal],'OXY': [CruiseOxy],'P': [CruiseP],'N':[CruiseN]}
+                    #to_df={'CRUISE': [CruiseFolder],'FILENAME': [botfname],'DATATYPE': [DataType],'DATE': [Date],'LAT':[CruiseLat],'LON':[CruiseLon],'PRES': [CruisePres],'TEMP':[CruiseTemp], 'SAL':[CruiseSal],'OXY': [CruiseOxy],'TC':[CruiseTC],'P': [CruiseP],'N':[CruiseN]}
                     df_temp=pd.DataFrame(data=to_df)
         
                     if df_counter == 0:
@@ -196,6 +202,6 @@ for CruiseFolder in BoatFileList:
                     else:
                         GOSHIPData=GOSHIPData.append(df_temp, ignore_index=True)
                         
-GOSHIPData.to_csv('/Users/Ellen/Documents/Python/ALL_GOSHIPData.csv')
+GOSHIPData.to_csv('/Users/Ellen/Documents/GitHub/12747_FinalProject/GOSHIPData.csv')
 
 
